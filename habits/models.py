@@ -2,7 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from datetime import timedelta
 
-class CustomUser(models.Model):
+class UserProfile(models.Model):
     user = models.OneToOneField('auth.User', on_delete=models.CASCADE, primary_key=True)
     telegram_chat_id = models.BigIntegerField(null=True, blank=True, unique=True)
 
@@ -10,7 +10,7 @@ class CustomUser(models.Model):
         return self.user.username
 
 class Habit(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     place = models.CharField(max_length=255)
     time = models.TimeField()
     action = models.TextField()

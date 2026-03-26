@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Habit, CustomUser
+from .models import Habit, UserProfile
 from .serializers import HabitSerializer
 from .permissions import IsOwnerOrReadOnly
 
@@ -24,7 +24,7 @@ class HabitViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Получаем CustomUser для текущего пользователя
-        custom_user = CustomUser.objects.get(user=self.request.user)
+        custom_user = UserProfile.objects.get(user=self.request.user)
         serializer.save(user=custom_user)
 
     @action(detail=False, methods=['get'])
