@@ -1,0 +1,17 @@
+[flake8]
+exclude =
+    venv/
+    .venv/
+    env/
+    .env/
+    __pycache__/
+    *.pyc
+    *.pyo
+    build/
+    dist/
+    docs/
+    tests/
+    migrations/
+max-line-length = 88
+per-file-ignores =
+    __init__.py: F401

@@ -6,19 +6,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 @shared_task
 def send_habit_reminder():
     """Задача Celery для отправки напоминаний о привычках"""
     now = datetime.now().time()
 
-    # Получаем привычки, время выполнения которых наступило
     habits_to_remind = Habit.objects.filter(
-        time__hour=now.hour,
-        time__minute=now.minute
+        time__hour=now.hour, time__minute=now.minute
     )
 
     for habit in habits_to_remind:
-        # Проверяем, есть ли у пользователя Telegram‑ID
         if habit.user.telegram_chat_id:
             message = (
                 f"⏰ Напоминание: пора выполнить привычку!\n\n"
@@ -30,4 +28,6 @@ def send_habit_reminder():
                 bot.send_message(habit.user.telegram_chat_id, message)
                 logger.info(f"Напоминание отправлено пользователю {habit.user.user.id}")
             except Exception as e:
-                logger.error(f"Ошибка отправки напоминания для пользователя {habit.user.user.id}: {e}")
+                logger.error(
+                    f"Ошибка отправки напоминания для пользователя {habit.user.user.id}: {e}"
+                )

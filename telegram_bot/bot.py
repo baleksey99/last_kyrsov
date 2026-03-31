@@ -2,9 +2,10 @@ import logging
 from telegram.ext import Application
 from decouple import config
 
-TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN')
+TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN")
 
 logger = logging.getLogger(__name__)
+
 
 class TelegramBot:
     def __init__(self):
@@ -17,6 +18,7 @@ class TelegramBot:
             logger.info(f"Сообщение отправлено пользователю {chat_id}")
         except Exception as e:
             logger.error(f"Ошибка отправки сообщения {chat_id}: {e}")
+
 
 # Глобальный экземпляр бота
 bot = TelegramBot()

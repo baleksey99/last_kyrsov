@@ -1,11 +1,11 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.contrib.auth.models import User
 from django.db.models import Q
 from .models import Habit, UserProfile
 from .serializers import HabitSerializer
 from .permissions import IsOwnerOrReadOnly
+
 
 class HabitViewSet(viewsets.ModelViewSet):
     serializer_class = HabitSerializer
@@ -14,35 +14,49 @@ class HabitViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_authenticated:
-            # Возвращаем привычки пользователя + все публичные
             return Habit.objects.filter(
                 Q(user__user=user) | Q(is_public=True)
-            )
+            ).select_related("user", "related_habit")
         else:
-            # Анонимный пользователь видит только публичные привычки
-            return Habit.objects.filter(is_public=True)
+            return Habit.objects.filter(is_public=True).select_related(
+                "user", "related_habit"
+            )
 
     def perform_create(self, serializer):
-        # Получаем CustomUser для текущего пользователя
-        custom_user = UserProfile.objects.get(user=self.request.user)
-        serializer.save(user=custom_user)
+        try:
+            user_profile = UserProfile.objects.get(user=self.request.user)
+        except UserProfile.DoesNotExist:
+            user_profile = UserProfile.objects.create(user=self.request.user)
 
-    @action(detail=False, methods=['get'])
+        serializer.save(user=user_profile)
+
+    @action(detail=False, methods=["get"])
     def my_habits(self, request):
         """Список привычек текущего пользователя"""
-        habits = Habit.objects.filter(user__user=request.user)
-        page = self.paginate_queryset(habits)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": "Требуется авторизация"}, status=status.HTTP_401_UNAUTHORIZED
+            )
 
-        serializer = self.get_serializer(habits, many=True)
-        return Response(serializer.data)
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            habits = Habit.objects.filter(user=user_profile).select_related(
+                "related_habit"
+            )
+            serializer = self.get_serializer(habits, many=True)
+            return Response(serializer.data)
+        except UserProfile.DoesNotExist:
+            return Response(
+                {"error": "Профиль пользователя не найден"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def public(self, request):
         """Список публичных привычек"""
-        public_habits = Habit.objects.filter(is_public=True)
+        public_habits = Habit.objects.filter(is_public=True).select_related(
+            "user", "related_habit"
+        )
         page = self.paginate_queryset(public_habits)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
