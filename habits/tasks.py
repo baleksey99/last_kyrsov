@@ -29,5 +29,7 @@ def send_habit_reminder():
                 logger.info(f"Напоминание отправлено пользователю {habit.user.user.id}")
             except Exception as e:
                 logger.error(
-                    f"Ошибка отправки напоминания для пользователя {habit.user.user.id}: {e}"
+                    f"Ошибка отправки напоминания для пользователя {habit.user.user.id}: "
+                    f"{e}"
                 )
+
